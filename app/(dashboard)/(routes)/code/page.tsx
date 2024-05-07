@@ -4,7 +4,7 @@ import axios from 'axios';
 import * as z from "zod";
 import { Code } from "lucide-react";
 import { useForm } from "react-hook-form";
-import {ChatCompletionRequestMessage} from 'openai';
+import { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 import ReactMarkdown from 'react-markdown';
 
 import { Heading } from "@/components/heading";
@@ -24,7 +24,7 @@ import BotAvatar from '@/components/bot-avatar';
 
 const CodePage = () => {
     const router = useRouter()
-    const [messages, setMessages] = useState<ChatCompletionRequestMessage[]>([])
+    const [messages, setMessages] = useState<ChatCompletionMessageParam[]>([])
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -37,7 +37,7 @@ const CodePage = () => {
 
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
        try {
-         const userMessage: ChatCompletionRequestMessage = {
+         const userMessage: ChatCompletionMessageParam = {
           role: "user",
           content: values.prompt,
          };  
@@ -104,9 +104,9 @@ const CodePage = () => {
                     <Empty label='No conversation started.'/>
                   )}
                   <div className='flex flex-col-reverse gap-y-4 '>
-                     {messages.map((message) => (
+                     {messages.map((message, index) => (
                       <div 
-                        key={message.content}
+                        key={index}
                         className={cn(
                           "p-8 w-full items-start gap-x-8 rounded-lg",
                           message.role === "user" ? "bg-white border border-black/10" : "bg-muted"
@@ -128,7 +128,7 @@ const CodePage = () => {
                            }}
                            className="text-sm overflow-hidden leading-7"
                          >
-                             {message.content || ""}
+                             {message.content as string}
                          </ReactMarkdown>
                       </div>
                      ))}

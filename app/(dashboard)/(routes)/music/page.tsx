@@ -2,10 +2,9 @@
 
 import axios from 'axios';
 import * as z from "zod";
-import { MessageSquare } from "lucide-react";
+import { Music } from "lucide-react";
 import { useForm } from "react-hook-form";
 
-import { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 import { Heading } from "@/components/heading";
 
 import { formSchema } from "./constants";
@@ -17,13 +16,10 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Empty from '@/components/empty';
 import Loader from '@/components/loader';
-import { cn } from '@/lib/utils';
-import UserAvatar from '@/components/user-avatar';
-import BotAvatar from '@/components/bot-avatar';
 
-const ConversationPage = () => {
+const MusicPage = () => {
     const router = useRouter()
-    const [messages, setMessages] = useState<ChatCompletionMessageParam[]>([])
+    const [music, setMusic] = useState<string>()
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -36,18 +32,11 @@ const ConversationPage = () => {
 
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
        try {
-         const userMessage: ChatCompletionMessageParam = {
-          role: "user",
-          content: values.prompt,
-         };  
-         const newMessages = [...messages, userMessage]
+         setMusic(undefined) 
 
-         const response = await axios.post("/api/conversation", {
-          messages: newMessages,
-         })
-
-         setMessages((current) => [...current, userMessage, response.data])
-
+         
+         const response = await axios.post("/api/music", values)
+         setMusic(response.data.audio);
          form.reset()
        } catch (error) {
          console.log(error)
@@ -59,11 +48,11 @@ const ConversationPage = () => {
     return (
         <div>
             <Heading
-              title="Conversation"
-              description="Our most advanced conversation model."
-              icon={MessageSquare}
-              iconColor="text-violet-500"
-              bgColor="bg-violet-500/10"
+              title="Music Generation"
+              description="Turn your prompt into music."
+              icon={Music}
+              iconColor="text-emerald-500"
+              bgColor="bg-emerald-500/10"
             />
             <div className="px-4 lg:px-8">
                 <div>
@@ -78,7 +67,7 @@ const ConversationPage = () => {
                                 <FormItem className="col-span-12 lg:col-span-10">
                                      <FormControl className="m-0 p-0">
                                         <Input
-                                         placeholder="How do I calculate the radius of a circle?"
+                                         placeholder="Piano solo"
                                          disabled={isLoading}
                                          {...field}
                                          className="border-0 outline-none focus-visible:ring-0 focus-visible:ring-transparent"
@@ -99,29 +88,22 @@ const ConversationPage = () => {
                       <Loader/>
                     </div>
                   )}
-                  {messages.length === 0 && !isLoading && (
-                    <Empty label='No conversation started.'/>
+                  {!music && !isLoading && (
+                    <Empty label='No music generated.'/>
                   )}
-                  <div className='flex flex-col-reverse gap-y-4 '>
-                     {messages.map((message, index) => (
-                      <div 
-                        key={index}
-                        className={cn(
-                          "p-8 w-full items-start gap-x-8 rounded-lg",
-                          message.role === "user" ? "bg-white border border-black/10" : "bg-muted"
-                        )}
-                      >
-                         {message.role === "user" ? <UserAvatar/> : <BotAvatar/>}
-                         <p className='text-sm'>
-                          {message.content as string}
-                         </p>
-                      </div>
-                     ))}
-                  </div>
+                  
+                  {music && (
+                    <audio controls className='w-full mt-8'>
+                         <source src={music}/> 
+                    </audio>
+                  )}
+
                 </div>
             </div>
         </div>
     );
 };
 
-export default ConversationPage;
+export default MusicPage;
+
+
